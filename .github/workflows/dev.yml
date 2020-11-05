@@ -1,13 +1,11 @@
-name: dev
+name: node 15
 
 on:
-  pull_request:
-    branches: [master]
   push:
     branches: [master]
 
 jobs:
-  test:
+  node15:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -25,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v1
         with:
-          node-version: "14.x"
+          node-version: "15.x"
           registry-url: "https://registry.npmjs.org"
 
       - name: Cache ~/.npm
@@ -40,49 +38,13 @@ jobs:
         working-directory: ./lib
         run: npm ci
 
-      - name: Build
+      - name: Print node and npm version
         working-directory: ./lib
-        run: npm run build
-
-      - name: Paradox Validate Links
-        run: sbtn paradoxValidateLinks
-
-      - name: Unit tests
-        working-directory: ./lib
-        run: npm run test:unit:ci
-
-      - name: Integration tests
-        working-directory: ./lib
-        run: npm run test:integration:ci
-
-      - name: Build - Example App
-        working-directory: ./example
         run: |
-          npm ci
-          npm run build
+          npm -v
+          node --version
 
-      - name: Selenium Test
-        run: sbt -DgenerateStoryReport=true -DRTM_PATH=./RTM -DOUTPUT_FILE=./testStoryMapping.txt clean test
 
-      - name: Generate RTM
-        if: always()
-        continue-on-error: true
-        run: |
-          sh rtm.sh
-
-      - name: Upload RTM
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v1
-        with:
-          name: RTM
-          path: ./RTM
-
-      - name: Notify slack
-        if: always()
-        continue-on-error: true
-        uses: kpritam/slack-job-status-action@v1
-        with:
-          job-status: ${{ job.status }}
-          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-          channel: ci-dev
+      - name: fix:prettier
+        working-directory: ./lib
+        run: npm run fix:prettier

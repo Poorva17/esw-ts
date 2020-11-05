@@ -1,18 +1,16 @@
-name: release
+name: node 14
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [master]
 
 jobs:
-  release:
-    env:
-      CSW_VERSION: "3.0.0-M1" # Change before releasing (before tagging repo)
-      ESW_VERSION: "0.2.0-M1"
+  node15:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      # https://www.pika.dev/npm/snowpack/discuss/444
+      # following step is needed because snowpack is watching files from node_modules as well
       - name: increase file watchers
         run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
@@ -28,71 +26,25 @@ jobs:
           node-version: "14.x"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Cache ~/.npm
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install
         working-directory: ./lib
         run: npm ci
 
-      - name: Build
-        run: |
-          sbtn scalafmtCheck
-          sbtn clean
-          sbtn makeSite
-          cd ./lib
-          npm run build
-
-      - name: Unit tests
+      - name: Print node and npm version
         working-directory: ./lib
-        run: npm run test:unit:ci
+        run: |
+          npm -v
+          node --version
 
-      - name: Integration tests
+
+      - name: fix:prettier
         working-directory: ./lib
-        run: npm run test:integration:ci
-
-      - name: Build - Example App
-        working-directory: ./example
-        run: |
-          npm ci
-          npm run build
-
-      - name: Selenium Test
-        run: sbt -DgenerateStoryReport=true -DRTM_PATH=./RTM clean test
-
-      - name: Generate RTM
-        if: always()
-        continue-on-error: true
-        run: |
-          sh rtm.sh
-
-      - name: Upload RTM
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v1
-        with:
-          name: RTM
-          path: ./RTM
-
-      - name: NPM Publish
-        working-directory: ./lib
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Docs Publish
-        run: |
-          echo 'echo $RELEASE_TOKEN' > /tmp/.git-askpass
-          chmod +x /tmp/.git-askpass
-          git config --global user.email "actions@github.com"
-          git config --global user.name "Github Action"
-          sbt -Dprod.publish=true clean ghpagesPushSite
-        env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          GIT_ASKPASS: /tmp/.git-askpass
-
-      - name: Notify slack
-        if: always()
-        continue-on-error: true
-        uses: kpritam/slack-job-status-action@v1
-        with:
-          job-status: ${{ job.status }}
-          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-          channel: ci-release
+        run: npm run fix:prettier
