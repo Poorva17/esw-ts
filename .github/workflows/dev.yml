@@ -50,9 +50,9 @@ jobs:
         working-directory: ./lib
         run: npm run clean
 
-      - name: TSC
+      - name: typescript compile
         working-directory: ./lib
-        run: npm run tsc
+        run: npm run compile
 
       - name: Paradox Validate Links
         run: sbtn paradoxValidateLinks
