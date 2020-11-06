@@ -12,7 +12,7 @@
   "scripts": {
     "start": "snowpack dev",
     "fix": "prettier --write --config ./.prettierrc './**/*.{ts,tsx}' ",
-    "build": "npm run fix && snowpack build",
+    "build": "snowpack build",
     "startConfig": "BROWSER=none pm2 start npm  --name example -- start",
     "stopConfig": "pm2 delete example"
   },

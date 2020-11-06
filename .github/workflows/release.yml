@@ -34,17 +34,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Install
-        working-directory: ./lib
-        run: npm ci
-
       - name: Print node and npm version
         working-directory: ./lib
         run: |
           npm -v
           node --version
 
-
-      - name: fix:prettier
+      - name: Install
         working-directory: ./lib
-        run: npm run fix:prettier
+        run: npm ci
+
+      - name: Clean
+        working-directory: ./lib
+        run: npm run clean
+
+      - name: TSC
+        working-directory: ./lib
+        run: npm run tsc
+
