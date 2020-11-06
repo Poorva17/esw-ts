@@ -1,13 +1,11 @@
-name: dev
+name: node 15
 
 on:
-  pull_request:
-    branches: [master]
   push:
     branches: [master]
 
 jobs:
-  test:
+  node15:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
